@@ -24,7 +24,7 @@ jobs:
         shell: pwsh
         run: |
           npm pack --dry-run 2>&1 | Out-String | Write-Host
-          $files = (npm pack --dry-run --json | ConvertFrom-Json)[0].files.name
+          $files = (npm pack --dry-run --json | ConvertFrom-Json)[0].files | ForEach-Object { $_.path }
           foreach ($required in @('lib/index.js', 'lib/restart-helper.ps1', 'client.js', 'cordis.patch.yml', 'icon.svg', 'locale/en.json', 'locale/zh.json', 'LICENSE', 'README.md')) {
             if ($files -notcontains $required) { throw "npm package is missing $required" }
           }
