@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="App Restart">
+  <rect x="4" y="4" width="56" height="56" rx="16" fill="#1f6feb"/>
+  <g fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M46 32a14 14 0 1 1-4.3-10"/>
+    <path d="M46 16v9h-9"/>
+  </g>
+</svg>

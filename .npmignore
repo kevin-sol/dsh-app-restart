@@ -1,0 +1,7 @@
+# Files npm never needs a user to read from the tarball.
+docs/
+*.png
+.agent-teams/
+node_modules/
+*.log
+*.tgz

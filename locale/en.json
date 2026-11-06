@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Reload & Restart",
+    "description": "Adds reload and restart actions to the sidebar foot: reload the page when only the UI is stale, restart the app so freshly installed or updated plugins load."
+  }
+}

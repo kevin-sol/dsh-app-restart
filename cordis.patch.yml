@@ -1,0 +1,5 @@
+# dsh-app-restart: one Host row. The Client face (a sidebar-foot action) rides
+# along because package.json's `dsh.client` advertises it.
+- insert:
+    - id: app-restart
+      name: dsh-app-restart

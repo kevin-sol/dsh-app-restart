@@ -1,0 +1,59 @@
+{
+  "name": "dsh-app-restart",
+  "version": "0.1.0",
+  "description": "Adds Reload and Restart actions to the DSH sidebar foot: reload the page when only the UI is stale, restart the whole app so freshly installed or updated plugins load.",
+  "type": "module",
+  "main": "./lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/restart-helper.ps1",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "LICENSE",
+    "README.md"
+  ],
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "cordis",
+    "restart",
+    "reload",
+    "desktop"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "os": [
+    "win32"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/melon77/dsh-app-restart.git"
+  },
+  "bugs": {
+    "url": "https://github.com/melon77/dsh-app-restart/issues"
+  },
+  "homepage": "https://github.com/melon77/dsh-app-restart#readme",
+  "author": "melon77",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-sidebar"
+      ]
+    }
+  }
+}
