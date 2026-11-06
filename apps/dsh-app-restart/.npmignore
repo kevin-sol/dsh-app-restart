@@ -1,7 +1,3 @@
-# Files npm never needs a user to read from the tarball.
-docs/
-*.png
-.agent-teams/
-node_modules/
-*.log
-*.tgz
+# Everything not listed below belongs to the npm package's public face.
+# The storefront raster icon ships with the repository, not with the package.
+assets/
