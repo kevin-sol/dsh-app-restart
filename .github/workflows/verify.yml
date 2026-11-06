@@ -1,0 +1,46 @@
+name: verify
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: manifest and JSON are valid
+        shell: pwsh
+        run: |
+          $manifest = Get-Content package.json -Raw | ConvertFrom-Json
+          if ($manifest.name -ne 'dsh-app-restart') { throw 'unexpected package name' }
+          if (-not $manifest.dsh.bundle.patch) { throw 'package.json must declare dsh.bundle.patch so the market can install it' }
+          if (-not $manifest.dsh.client) { throw 'package.json must declare dsh.client' }
+          Get-ChildItem locale -Filter *.json | ForEach-Object { $null = Get-Content $_.FullName -Raw | ConvertFrom-Json }
+      - name: every runtime file ships in the package
+        shell: pwsh
+        run: |
+          npm pack --dry-run 2>&1 | Out-String | Write-Host
+          $files = (npm pack --dry-run --json | ConvertFrom-Json)[0].files.name
+          foreach ($required in @('lib/index.js', 'lib/restart-helper.ps1', 'client.js', 'cordis.patch.yml', 'icon.svg', 'locale/en.json', 'locale/zh.json', 'LICENSE', 'README.md')) {
+            if ($files -notcontains $required) { throw "npm package is missing $required" }
+          }
+      - name: JavaScript parses
+        shell: pwsh
+        run: |
+          node --check client.js
+          node --check lib/index.js
+      - name: PowerShell helper parses
+        shell: pwsh
+        run: |
+          $errors = $null
+          $null = [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $PWD 'lib/restart-helper.ps1'), [ref]$null, [ref]$errors)
+          if ($errors.Count -ne 0) { $errors | Out-String | Write-Host; throw 'lib/restart-helper.ps1 has parse errors' }
+      - name: patch inserts the loader row
+        shell: pwsh
+        run: |
+          $patch = Get-Content cordis.patch.yml -Raw
+          if ($patch -notmatch '(?m)^\s*name:\s*dsh-app-restart\s*$') { throw 'cordis.patch.yml must insert a row named dsh-app-restart' }
