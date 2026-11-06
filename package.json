@@ -1,23 +1,24 @@
 {
   "name": "dsh-app-restart",
   "version": "0.1.0",
-  "description": "Adds Reload and Restart actions to the DSH sidebar foot: reload the page when only the UI is stale, restart the whole app so freshly installed or updated plugins load.",
+  "private": true,
   "type": "module",
-  "main": "./host/index.js",
+  "description": "Adds Reload and Restart actions to the DSH sidebar foot: reload the page when only the UI is stale, restart the whole app so freshly installed or updated plugins load.",
+  "main": "./lib/index.js",
   "exports": {
-    ".": "./host/index.js",
-    "./client": "./client/client.js",
+    ".": "./lib/index.js",
+    "./client": "./client.js",
     "./locale/*.json": "./locale/*.json",
-    "./icon": "./icon.svg",
-    "./cordis.patch.yml": "./cordis.patch.yml"
+    "./icon": "./icon.svg"
   },
   "files": [
-    "host/index.js",
-    "host/restart-helper.ps1",
-    "client/client.js",
+    "lib/index.js",
+    "lib/restart-helper.ps1",
+    "client.js",
     "cordis.patch.yml",
     "locale/*.json",
     "icon.svg",
+    "assets/*.png",
     "LICENSE",
     "README.md"
   ],
@@ -50,11 +51,7 @@
       "patch": "./cordis.patch.yml"
     },
     "client": {
-      "platform": "web",
-      "immediately": true,
-      "inject": [
-        "@deepseek-ai/dsh-client-ui-sidebar"
-      ]
+      "platform": "web"
     }
   }
 }
