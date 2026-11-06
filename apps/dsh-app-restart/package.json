@@ -3,17 +3,18 @@
   "version": "0.1.0",
   "description": "Adds Reload and Restart actions to the DSH sidebar foot: reload the page when only the UI is stale, restart the whole app so freshly installed or updated plugins load.",
   "type": "module",
-  "main": "./lib/index.js",
+  "main": "./host/index.js",
   "exports": {
-    ".": "./lib/index.js",
-    "./client": "./client.js",
+    ".": "./host/index.js",
+    "./client": "./client/client.js",
     "./locale/*.json": "./locale/*.json",
-    "./icon": "./icon.svg"
+    "./icon": "./icon.svg",
+    "./cordis.patch.yml": "./cordis.patch.yml"
   },
   "files": [
-    "lib/index.js",
-    "lib/restart-helper.ps1",
-    "client.js",
+    "host/index.js",
+    "host/restart-helper.ps1",
+    "client/client.js",
     "cordis.patch.yml",
     "locale/*.json",
     "icon.svg",

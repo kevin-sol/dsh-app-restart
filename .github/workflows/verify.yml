@@ -7,40 +7,49 @@ on:
 jobs:
   verify:
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: apps/dsh-app-restart
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: manifest and JSON are valid
-        shell: pwsh
+      - name: manifest and locale files are valid
         run: |
           $manifest = Get-Content package.json -Raw | ConvertFrom-Json
           if ($manifest.name -ne 'dsh-app-restart') { throw 'unexpected package name' }
-          if (-not $manifest.dsh.bundle.patch) { throw 'package.json must declare dsh.bundle.patch so the market can install it' }
+          if (-not $manifest.dsh.bundle.patch) { throw 'package.json must declare dsh.bundle.patch, otherwise nothing is installable' }
           if (-not $manifest.dsh.client) { throw 'package.json must declare dsh.client' }
           Get-ChildItem locale -Filter *.json | ForEach-Object { $null = Get-Content $_.FullName -Raw | ConvertFrom-Json }
-      - name: every runtime file ships in the package
-        shell: pwsh
+      - name: every advertised entry point exists
         run: |
-          npm pack --dry-run 2>&1 | Out-String | Write-Host
-          $files = (npm pack --dry-run --json | ConvertFrom-Json)[0].files | ForEach-Object { $_.path }
-          foreach ($required in @('lib/index.js', 'lib/restart-helper.ps1', 'client.js', 'cordis.patch.yml', 'icon.svg', 'locale/en.json', 'locale/zh.json', 'LICENSE', 'README.md')) {
-            if ($files -notcontains $required) { throw "npm package is missing $required" }
+          $manifest = Get-Content package.json -Raw | ConvertFrom-Json
+          $paths = @($manifest.main, $manifest.dsh.bundle.patch, $manifest.exports.'./client', $manifest.exports.'./icon')
+          foreach ($path in $paths) {
+            if (-not $path) { throw 'package.json has an empty entry point' }
+            if (-not (Test-Path (Join-Path $PWD $path))) { throw "package.json points at a missing file: $path" }
+          }
+      - name: every runtime file ships in the package
+        run: |
+          $packed = (npm pack --dry-run --json | ConvertFrom-Json)[0]
+          $files = $packed.files | ForEach-Object { $_.path }
+          Write-Host "packed $($files.Count) files: $($files -join ', ')"
+          $required = @('host/index.js', 'host/restart-helper.ps1', 'client/client.js', 'cordis.patch.yml', 'icon.svg', 'locale/en.json', 'locale/zh.json', 'LICENSE', 'README.md')
+          foreach ($path in $required) {
+            if ($files -notcontains $path) { throw "npm package is missing $path" }
           }
       - name: JavaScript parses
-        shell: pwsh
         run: |
-          node --check client.js
-          node --check lib/index.js
+          node --check client/client.js
+          node --check host/index.js
       - name: PowerShell helper parses
-        shell: pwsh
         run: |
           $errors = $null
-          $null = [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $PWD 'lib/restart-helper.ps1'), [ref]$null, [ref]$errors)
-          if ($errors.Count -ne 0) { $errors | Out-String | Write-Host; throw 'lib/restart-helper.ps1 has parse errors' }
+          $null = [System.Management.Automation.Language.Parser]::ParseFile((Join-Path $PWD 'host/restart-helper.ps1'), [ref]$null, [ref]$errors)
+          if ($errors.Count -ne 0) { $errors | Out-String | Write-Host; throw 'host/restart-helper.ps1 has parse errors' }
       - name: patch inserts the loader row
-        shell: pwsh
         run: |
           $patch = Get-Content cordis.patch.yml -Raw
           if ($patch -notmatch '(?m)^\s*name:\s*dsh-app-restart\s*$') { throw 'cordis.patch.yml must insert a row named dsh-app-restart' }
