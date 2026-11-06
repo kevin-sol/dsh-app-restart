@@ -37,13 +37,13 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/melon77/dsh-app-restart.git"
+    "url": "git+https://github.com/kevin-sol/dsh-app-restart.git"
   },
   "bugs": {
-    "url": "https://github.com/melon77/dsh-app-restart/issues"
+    "url": "https://github.com/kevin-sol/dsh-app-restart/issues"
   },
-  "homepage": "https://github.com/melon77/dsh-app-restart#readme",
-  "author": "melon77",
+  "homepage": "https://github.com/kevin-sol/dsh-app-restart#readme",
+  "author": "kevin-sol",
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
