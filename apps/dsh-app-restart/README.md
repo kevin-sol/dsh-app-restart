@@ -4,12 +4,15 @@
 安装或更新插件后需要重启才能加载新代码，这时点「重启」即可，不必再去任务栏里找窗口、关掉、重开。
 
 ```bash
-# 桌面版：设置 → 插件 → 添加插件，填入 dsh-app-restart
-# 或命令行（普通 dsh web profile）
-dsh plugin --profile <profile> add dsh-app-restart
+# 桌面版：设置 → 插件 → 添加插件，填入本仓库地址
+# 或命令行
+dsh plugin --profile <profile> add github:kevin-sol/dsh-app-restart
 ```
 
 安装后需要重启一次才生效；之后就用侧边栏里的按钮。
+
+> 包本身在仓库的 `apps/dsh-app-restart/` 子目录里。仓库根目录的 `client.js` 是这个包的
+> Client 入口的转发文件，因为宿主只从包根加载 `client.js`。
 
 ## 使用
 
@@ -32,14 +35,16 @@ dsh plugin --profile <profile> add dsh-app-restart
 
 - Electron 主进程没有向插件开放 relaunch 通道：Desktop Host 的 IPC 事件白名单只接受
   `shutdown-complete` / `ready` / `platform-session` / `fatal` / `update-tasks` / `quit-inspection`，
-  发其他消息会被当作非法事件并杀掉 Host；preload 也没有暴露 rest/quit。所以必须从进程外部重启。
-- 插件的 Host 半身在 `GET /dsh-app-restart/status` 与 `POST /dsh-app-restart/restart` 上提供接口；
-  Client 半身只发同源 `fetch`。写操作要求 loopback 对端 + loopback `Host` 头 + 同源 `Origin`，
+  发其他消息会被当作非法事件并杀掉 Host；preload 也没有暴露 restart/quit。所以必须从进程外部重启。
+- 插件的 Host 半身（`host/index.js`）在 `GET /dsh-app-restart/status` 与
+  `POST /dsh-app-restart/restart` 上提供接口；Client 半身（`client/client.js`）只发同源 `fetch`。
+  写操作要求 loopback 对端 + loopback `Host` 头 + 同源 `Origin`；桌面窗口经 Electron 协议处理器
+  转发时这些头会被剥掉，那条路径另要求一个自定义请求头（自定义头会强制 CORS 预检，而路由不响应预检），
   跨站页面无法伪造。
 - Host 半身用 `process.execPath`（即 exe 路径）与 `process.ppid`（即 Electron 主进程 PID）
   确定重启目标，再通过 WMI 创建一个与自己进程树无关的启动器（父进程变成 `WmiPrvSE`），
   这样应用被杀掉时助手仍存活。
-- 助手（`lib/restart-helper.ps1`）先杀**整棵进程树**（只杀主进程会把 Desktop Host 和 renderer
+- 助手（`host/restart-helper.ps1`）先杀**整棵进程树**（只杀主进程会把 Desktop Host 和 renderer
   留成孤儿，它们占着 profile 锁和端口，而新实例会再起一个 Host），确认 PID 真正消失
   （单实例锁必须释放，否则新进程会立刻自杀），清掉从 Host 继承的
   `ELECTRON_RUN_AS_NODE` / `DSH_*` 等变量，再拉起同一个 exe。
@@ -65,7 +70,25 @@ Electron 继承了同一个控制台，于是它的日志出现在那扇窗里�
 - 想只看不动手：`POST /dsh-app-restart/restart` 带 `{"dryRun":true}`，助手会校验目标后停下。
 - 按钮在 20 秒内没等到应用退出，会自动回到可点击状态并显示失败阶段，不会一直转圈。
 
+## 目录结构
+
+```
+apps/dsh-app-restart/      可安装的包（package.json 里声明 dsh.bundle 与 dsh.client）
+  host/index.js            Host 半身：路由、WMI 启动器、状态读取
+  host/restart-helper.ps1  独立助手：整树终止、等待退出、清理环境、重新拉起
+  client/client.js         Client 半身：侧边栏底部的「刷新」「重启」
+  cordis.patch.yml         插入一行 Host 插件
+  locale/{en,zh}.json      市场卡片标题与描述
+  icon.svg                 图标（包内导出，市场用 GitHub 托管的位图时另存）
+client.js                   转发文件：指向 Client 入口，供宿主从包根加载
+.github/workflows/verify.yml CI：manifest、包内容、语法、patch 行校验
+```
+
 ## 限制
 
 - 仅 Windows 桌面版可用（Linux/macOS 下按钮显示为不可用）。
 - 重启是一次干净的整进程重启：正在运行的 agent 回合、后台任务会随进程一起中断。
+
+## 许可证
+
+MIT
